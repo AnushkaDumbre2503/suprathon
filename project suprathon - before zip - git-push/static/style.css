@@ -1,0 +1,205 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #ade8f4;
+    color: #333;
+    min-height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background: #002855;
+    color: #fff;
+    padding: 1em;
+    display: flex;
+    justify-content: space-between;
+}
+.form-container,
+.dashboard,
+.interview-container {
+    max-width: 600px;
+    height: auto;
+    margin: 2em auto;
+    background: #fff;
+    padding: 2em;
+    border-radius: 8px;
+    box-sizing: border-box;
+    width: 90vw;
+    min-width: 300px;
+}
+.form-container form label {
+    display: block;
+    margin: 10px 0 5px;
+    /* top, right/left, bottom */
+    font-weight: bold;
+}
+
+.form-container form input,
+.form-container form select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: whitesmoke;
+    box-sizing: border-box;
+}
+
+header h1 {
+    margin: 0;
+}
+
+header nav a {
+    color: #fff;
+    margin-left: 1em;
+    text-decoration: none;
+}
+
+main {
+    flex: 1;
+    padding: 1em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Dashboard Container */
+.dashboard {
+    max-width: 80%;
+     width: 100%; 
+    background: #fff;
+    padding: 1em;
+    border-radius: 8px;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+/* Responsive Table */
+/* Scrollable table container */
+.table-container {
+    max-height: 400px;
+    /* Table scroll height */
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+/* Flex layout for filter form */
+.filter-form {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    /* Space between elements */
+    flex-wrap: wrap;
+    /* Wrap on smaller screens */
+    margin-bottom: 1rem;
+}
+/* Individual filter items (label + input together) */
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+/* Inputs & buttons */
+.filter-form input,
+.filter-form button {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+@media (max-width: 768px) {
+    .filter-form {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filter-item {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .filter-form button {
+        align-self: center;
+        width: 100%;
+        max-width: 200px;
+    }
+}
+/* Fixed header */
+.report-table thead th {
+    position: sticky;
+    top: 0;
+    background: #002855;
+    color: #fff;
+    z-index: 2;
+}
+
+/* Table style */
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+
+.report-table th,
+.report-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    
+    vertical-align: middle;
+    
+    white-space: normal;
+        word-break: break-word;
+        max-width: 200px;
+}
+
+
+
+/* Buttons */
+button,
+.btn {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 0.7em 1em;
+    cursor: pointer;
+    border-radius: 4px;
+    text-decoration: none;
+    margin: 3px 0;
+     /* display: flex;
+    justify-content: center;
+    align-items: center;  */
+}
+
+button:hover,
+.btn:hover {
+    background: #0056b3;
+}
+
+.remove {
+    background: rgb(238, 80, 80);
+}
+
+.remove:hover {
+    background-color: red;
+}
+
+footer {
+    width: 100%;
+    background: #002855;
+    color: #fff;
+    text-align: center;
+    padding: 0.3em 0;
+    font-size: 1em;
+    margin-top: auto;
+}
+
