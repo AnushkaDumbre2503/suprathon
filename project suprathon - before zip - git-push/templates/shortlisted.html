@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class='dashboard admin-dashboard'>
+    <h2>Shortlisted Candidates</h2>
+    <table class='report-table'>
+        <tr>
+            <th>Name</th>
+            <th>Post</th>
+            <th>PDF</th>
+            <th>Action</th>
+        </tr>
+        {% for r in reports %}
+        <tr>
+            <td>{{ r.user.username }}</td>
+            <td>{{ r.post }}</td>
+            <td>
+                {% if r.pdf_path %}
+                <a class='btn' href='{{ url_for("serve_pdf", report_id=r.id) }}'>Download PDF</a>
+                {% else %}
+                No PDF
+                {% endif %}
+            </td>
+            <td>
+                {% if not r.hired %}
+                <a class='btn' href='{{ url_for("hire", report_id=r.id) }}'>Hire</a>
+                {% else %}
+                Hired
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a class='btn' href='{{ url_for("hr_dashboard") }}'>Back to HR Dashboard</a>
+</div>
+{% endblock %}

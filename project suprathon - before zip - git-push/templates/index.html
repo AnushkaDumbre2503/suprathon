@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Suprazo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
+    <link rel="stylesheet" href="/static/landing.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div id="logo">
+           
+        </div>
+        <div class="nav-right">
+            <a href="{{ url_for('signup') }}" class="signup-btn">Sign Up</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="content">
+            <h1>Welcome to Supra Technologies</h1>
+            <p>
+                Supra Technologies is your one-stop platform for AI-driven HR interview analysis,
+                candidate shortlisting, and data-driven hiring solutions.
+            </p>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+
+</html>

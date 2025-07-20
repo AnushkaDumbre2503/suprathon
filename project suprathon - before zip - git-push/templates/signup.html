@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class='form-container'>
+    <h2>Create an Account</h2>
+    <form method='POST' autocomplete="off" autofocus>
+        <label>Username:</label>
+        <input type='text' 
+        name='username' placeholder="Name" required><br>
+        <label>Password:</label>
+        <input type='password' name='password' placeholder="Password" required><br>
+        
+        <label>Role:</label>
+        <select name='role' required>
+            <option value="" disabled selected>Select Role</option>
+            <option value='interviewee'>Interviewee</option>
+            <option value='hr'>HR (Admin)</option>
+        </select>
+        <button type='submit'>Signup</button>
+    </form>
+    <p>Already have an account? <a href='{{ url_for("login") }}'>Login here</a>.</p>
+</div>
+
+{% endblock %}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>HR Interview Platform</title>
+    <link rel='stylesheet' href='{{ url_for("static", filename="style.css") }}'>
+    <!-- <link rel="stylesheet" href="/static/landing.css"> -->
+</head>
+<body>
+<header>
+    <h1>HR Interview Platform</h1>
+    <nav>
+        {% if session.get('role') == 'hr' %}
+            <a href='{{ url_for("hr_dashboard") }}'>HR Dashboard</a>
+        {% elif session.get('role') == 'interviewee' %}
+            <a href='{{ url_for("interviewee_dashboard") }}'>Interviewee Dashboard</a>
+        {% endif %}
+        {% if session.get('user_id') %}
+            <a href='{{ url_for("logout") }}'>Logout</a>
+        {% endif %}
+    </nav>
+</header>
+<main>
+    {% block content %}{% endblock %}
+</main>
+<footer>
+    <p>&copy; 2025 HR Interview Platform</p>
+</footer>
+</body>
+</html>

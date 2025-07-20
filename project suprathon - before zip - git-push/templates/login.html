@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class='form-container'>
+    <h2>Login</h2>
+    <form method='POST' autocomplete="off" autofocus="">
+        <label>Username:</label>
+        <input type='text' name='username' placeholder="Name">
+        <label>Password:</label>
+        <input type='password' name='password' required placeholder="Password">
+        <button type='submit'>Login</button>
+    </form>
+    <p>Don't have an account? <a href='{{ url_for("signup") }}'>Signup here</a>.</p>
+</div>
+{% endblock %}

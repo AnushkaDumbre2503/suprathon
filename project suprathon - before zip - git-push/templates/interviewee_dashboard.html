@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+    <div class="header">
+        <h1>📹 Video Analysis</h1>
+        <p>Record your presentation and get instant feedback</p>
+    </div>
+
+    <!-- Post Input Section -->
+    <div class="post-section">
+        <h3>Apply for a Post</h3>
+        <form id="postForm">
+            <input type="text" id="postInput" name="post_applied"
+                placeholder="Enter post applied for (e.g., Software Engineer)" required>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        <p id="postMessage"></p>
+    </div>
+
+    <div class="video-section">
+        <video id="videoElement" playsinline autoplay muted></video>
+        <div class="controls">
+            <button id="startBtn" class="btn btn-primary">
+                🎥 Start Recording
+            </button>
+            <button id="stopBtn" class="btn btn-danger" disabled>
+                ⏹️ Stop Recording
+            </button>
+        </div>
+    </div>
+
+    <div class="error-message" id="errorMessage"></div>
+
+    <div class="loading" id="loadingSection" style="display: none;">
+        <div class="spinner"></div>
+        <h3>Analyzing your video...</h3>
+        <p>This may take a few moments while we process your presentation</p>
+    </div>
+
+    <div class="report-section" id="reportSection" style="display: none;">
+        <div class="overall-rating">
+            <div class="rating-circle" id="overallScore">-</div>
+            <div class="stars" id="starRating">⭐⭐⭐⭐⭐</div>
+            <h2>Overall Performance</h2>
+        </div>
+
+        <div class="report-card">
+            <h3>📊 Analysis Results</h3>
+            <div class="metric">
+                <span class="metric-name">Filler Words</span>
+                <span class="metric-value" id="fillerWords">-</span>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Speech Rate</span>
+                <span class="metric-value" id="speechRate">-</span>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Sentiment</span>
+                <span class="metric-value" id="sentiment">-</span>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Body Language</span>
+                <span class="metric-value" id="bodyLanguage">-</span>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Audio Quality</span>
+                <span class="metric-value" id="audioQuality">-</span>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <h3>⏰ Improvement Timelines</h3>
+            <div id="improvementTimelines">
+                <p>No specific improvements identified.</p>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <h3>💡 Recommendations</h3>
+            <div id="recommendations">
+                <p>Complete your recording to see personalized recommendations!</p>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <h3>📜 Transcription</h3>
+            <div id="transcription" class="transcription-text">
+                <p>Transcription will appear here after analysis.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const hrQuestions = JSON.parse('{{ questions | tojson | safe }}' || '[]');
+    let postApplied = '';
+
+    let mediaRecorder;
+    let recordedChunks = [];
+    let stream;
+    let recordedBlob;
+
+    const videoElement = document.getElementById("videoElement");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const loadingSection = document.getElementById("loadingSection");
+    const reportSection = document.getElementById("reportSection");
+    const errorMessage = document.getElementById("errorMessage");
+    const postInput = document.getElementById("postInput");
+    const postForm = document.getElementById("postForm");
+    const postMessage = document.getElementById("postMessage");
+
+    async function initCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            videoElement.srcObject = stream;
+        } catch (error) {
+            console.error("Error accessing camera:", error);
+            errorMessage.textContent = "Please allow camera and microphone access.";
+            errorMessage.classList.add("show");
+        }
+    }
+
+    postForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        postApplied = postInput.value.trim();
+        if (postApplied) {
+            postMessage.textContent = `Post applied for: ${postApplied}`;
+            postMessage.style.color = "green";
+            postInput.value = '';
+        } else {
+            postMessage.textContent = "Please enter a valid post.";
+            postMessage.style.color = "red";
+        }
+    });
+
+    startBtn.addEventListener("click", async () => {
+        if (!stream) await initCamera();
+
+        recordedChunks = [];
+        try {
+            mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp8,opus" });
+        } catch (e) {
+            console.error("MediaRecorder init failed:", e);
+            errorMessage.textContent = "Failed to start recording. Please try a different browser.";
+            errorMessage.classList.add("show");
+            return;
+        }
+
+        const enterFullScreen = async () => {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) await elem.requestFullscreen();
+            else if (elem.webkitRequestFullscreen) await elem.webkitRequestFullscreen();
+            else if (elem.msRequestFullscreen) await elem.msRequestFullscreen();
+        };
+        await enterFullScreen();
+
+        document.addEventListener("fullscreenchange", () => {
+            if (!document.fullscreenElement) {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    alert("⚠️ Fullscreen exited! Recording stopped.");
+                    mediaRecorder.stop();
+                    stopBtn.disabled = true;
+                    startBtn.disabled = false;
+                }
+            }
+        });
+
+        const questionBox = document.createElement("div");
+        questionBox.id = "hrQuestions";
+        questionBox.style =
+            "margin: 30px auto; text-align: left; max-width: 700px; background: #fefefe; border: 1px solid #ddd; padding: 20px; border-radius: 10px;";
+        questionBox.innerHTML = `
+            <h3>🎙️ HR Interview Questions (Answer Within 2 Minutes)</h3>
+            <ol>${hrQuestions.map(q => `<li>${q}</li>`).join('')}</ol>
+        `;
+        document.querySelector(".video-section").appendChild(questionBox);
+
+        mediaRecorder.ondataavailable = e => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            recordedBlob = new Blob(recordedChunks, { type: "video/webm" });
+            stream.getTracks().forEach(track => track.stop());
+            videoElement.srcObject = null;
+            videoElement.src = URL.createObjectURL(recordedBlob);
+            videoElement.controls = true;
+            videoElement.autoplay = false;
+            document.exitFullscreen().catch(() => { });
+            if (document.getElementById("hrQuestions")) {
+                document.getElementById("hrQuestions").remove();
+            }
+            uploadVideo();
+            stopBtn.disabled = true;
+            stopBtn.style.pointerEvents = "none";
+            startBtn.disabled = false;
+        };
+
+        mediaRecorder.start();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        setTimeout(() => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                alert("⏰ Time's up! Recording stopped.");
+                mediaRecorder.stop();
+            }
+        }, 120000);
+    });
+
+    stopBtn.addEventListener("click", () => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+            loadingSection.style.display = 'block';
+        }
+    });
+
+    async function uploadVideo() {
+        if (recordedChunks.length === 0) {
+            errorMessage.textContent = "No video recorded.";
+            errorMessage.classList.add("show");
+            loadingSection.style.display = 'none';
+            return;
+        }
+
+        loadingSection.style.display = 'block';
+        errorMessage.classList.remove("show");
+
+        const formData = new FormData();
+        formData.append("video", recordedBlob, "recorded_video.webm");
+        if (postApplied) {
+            formData.append("post_applied", postApplied);
+        }
+
+        try {
+            const response = await fetch("/start_interview", {
+                method: "POST",
+                body: formData
+            });
+            const result = await response.json();
+            loadingSection.style.display = 'none';
+
+            if (response.ok && result.status === "ok") {
+                reportSection.style.display = 'block';
+                displayReport(result.report);
+            } else {
+                errorMessage.textContent = result.message || "Error occurred during analysis.";
+                errorMessage.classList.add("show");
+            }
+        } catch (error) {
+            console.error("Error uploading video:", error);
+            loadingSection.style.display = 'none';
+            errorMessage.textContent = "Network error: " + error.message;
+            errorMessage.classList.add("show");
+        }
+    }
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${minutes}:${secs.toString().padStart(2, "0")}`;
+    }
+
+    function getKeywordOverlapScore(questions, transcript) {
+        const minCoveragePerQuestion = 0.4;
+        const transcriptWords = (transcript || "")
+            .toLowerCase()
+            .replace(/[^\w\s]/g, "")
+            .split(/\s+/);
+        let totalScore = 0;
+
+        for (const question of questions) {
+            const qWords = question
+                .toLowerCase()
+                .replace(/[^\w\s]/g, "")
+                .split(/\s+/)
+                .filter(w => w.length > 3);
+            const matched = qWords.filter(w => transcriptWords.includes(w));
+            const coverage = matched.length / qWords.length;
+            totalScore += coverage >= minCoveragePerQuestion ? 1 : 0;
+        }
+
+        return totalScore / questions.length;
+    }
+
+    function displayReport(data) {
+        const transcript = (data.transcription?.text || "").trim();
+        const speechWPM = data.speech_fluency?.speech_rate?.average_wpm || 0;
+        const wordCount = transcript
+            .split(/\s+/)
+            .filter(w => w.length > 2).length;
+
+        const relevanceScore = getKeywordOverlapScore(hrQuestions, transcript);
+
+        if (wordCount < 5 || speechWPM < 30 || relevanceScore < 0.3) {
+            data.overall_performance.star_rating = 1;
+        } else if (relevanceScore < 0.5) {
+            data.overall_performance.star_rating = Math.min(
+                data.overall_performance.star_rating || 5,
+                2
+            );
+        }
+
+        // Update Overall Performance
+        const starRating = data.overall_performance?.star_rating || 0;
+        document.getElementById("overallScore").textContent = `${starRating}/5`;
+        document.getElementById("starRating").textContent =
+            "⭐".repeat(starRating) + "☆".repeat(5 - starRating);
+
+        // Update Analysis Results
+        document.getElementById("fillerWords").textContent =
+            `${data.speech_fluency?.filler_words?.ratio_percentage || 0}% (${data.speech_fluency?.filler_words?.score || 0}/5)`;
+        document.getElementById("speechRate").textContent =
+            `${data.speech_fluency?.speech_rate?.average_wpm || 0} WPM (${data.speech_fluency?.speech_rate?.score || 0}/5)`;
+        document.getElementById("sentiment").textContent =
+            `${data.emotional_delivery?.overall_tone?.positive_ratio || 0}% Positive (${data.emotional_delivery?.overall_tone?.score || 0}/5)`;
+        document.getElementById("bodyLanguage").textContent =
+            `${data.physical_presence?.posture_confidence?.score || 0}/5 (Eye Contact: ${data.physical_presence?.eye_contact?.score || 0}/5)`;
+        document.getElementById("audioQuality").textContent =
+            `${data.technical_quality?.audio?.score || 0}/5 (SNR: ${data.technical_quality?.audio?.quality_metrics?.signal_to_noise_ratio || 0} dB)`;
+
+        // Update Improvement Timelines (deduplicated by recommendation)
+        const improvementTimelines = document.getElementById("improvementTimelines");
+        const timelines = data.improvement_timelines || {};
+        const allTimelines = [
+            ...(timelines.filler_words || []),
+            ...(timelines.pauses || []),
+            ...(timelines.sentiment || [])
+        ];
+        const uniqueTimelines = {};
+        for (let item of allTimelines) {
+            const rec = item.recommendation;
+            if (!uniqueTimelines[rec] || item.start < uniqueTimelines[rec].start) {
+                uniqueTimelines[rec] = item;
+            }
+        }
+        const uniqueTimelineArray = Object.values(uniqueTimelines);
+        if (uniqueTimelineArray.length) {
+            improvementTimelines.innerHTML = `
+                <ul>
+                    ${uniqueTimelineArray.map(item => `<li>${item.recommendation || 'N/A'} (at ${formatTime(item.start || 0)})</li>`).join('')}
+                </ul>
+            `;
+        } else {
+            improvementTimelines.innerHTML = "<p>No specific improvements identified.</p>";
+        }
+
+        // Update Recommendations (deduplicated)
+        const recommendations = document.getElementById("recommendations");
+        const uniqueRecommendations = [...new Set(uniqueTimelineArray.map(item => item.recommendation).filter(rec => rec))];
+        if (uniqueRecommendations.length) {
+            recommendations.innerHTML = `
+                <ul>
+                    ${uniqueRecommendations.map(rec => `<li>${rec}</li>`).join('')}
+                </ul>
+            `;
+        } else {
+            recommendations.innerHTML = "<p>No recommendations available.</p>";
+        }
+
+        // Update Transcription
+        document.getElementById("transcription").textContent =
+            transcript || "No transcription available.";
+    }
+
+    initCamera();
+</script>
+{% endblock %}

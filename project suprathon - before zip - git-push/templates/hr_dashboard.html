@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class='dashboard admin-dashboard'>
+    <h2>HR Dashboard</h2>
+    <form method='GET' class='filter-form'>
+        <label>Filter by Post:</label>
+        <input type='text' name='post' value='{{ request.args.get("post", "") }}'>
+        <label>Minimum Score:</label>
+        <input type='number' step='0.1' name='min_score' value='{{ request.args.get("min_score", "") }}'>
+        <button type='submit'>Apply Filters</button>
+    </form>
+
+    <!-- Table Wrapper for Scroll -->
+    <div class="table-container">
+        <table class='report-table'>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Post</th>
+                    <th>Actions</th>
+                    <th>Score</th>
+                    <th>Analysis</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr id="row-{{ r.id }}">
+                    <td>{{ r.user.username }}</td>
+                    <td>{{ r.post }}</td>
+                    <td class="btnact">
+                        <form action="{{ url_for('remove', report_id=r.id) }}" method="POST"
+                            style="display:flex;align-items: center;justify-content: center;">
+                            <button type="submit" class="btn remove">Remove</button>
+                        </form>
+                        <form action="{{ url_for('shortlist', report_id=r.id) }}" method="POST"
+                            style="display:flex;align-items: center;justify-content: center;"
+                            onsubmit="handleShortlist(event, '{{ r.id }}')">
+                            <button type="submit" class="btn shortlist" data-report-id="{{ r.id }}">Shortlist</button>
+                        </form>
+                    </td>
+                    <td>{{ r.score }}</td>
+                    <td>{{ r.analysis }}</td>
+                    <td>
+                        {% if r.pdf_path %}
+                        <a class='btn' href='{{ url_for("serve_pdf", report_id=r.id) }}'>Download PDF</a>
+                        {% else %}
+                        No PDF
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function handleShortlist(event, reportId) {
+        event.preventDefault(); // Prevent default form submission
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                // Hide the row but don't remove it
+                const row = document.getElementById(`row-${reportId}`);
+                if (row) {
+                    row.style.display = 'none';
+                }
+
+                // Redirect to shortlisted.html page
+                window.location.href = '{{ url_for("shortlisted") }}';
+            } else {
+                console.error('Shortlist failed:', await response.text());
+                alert('Failed to shortlist candidate. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error during shortlist:', error);
+            alert('An error occurred. Please try again.');
+        }
+    }
+</script>
+
+{% endblock %}
